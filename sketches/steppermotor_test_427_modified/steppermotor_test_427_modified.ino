@@ -67,7 +67,7 @@ void loop() {
   }
 
   delay(1000);
-  Serial.println("finished 50 turns - toggling direction");
+  Serial.println("finished 200 steps (1 turn) - toggling direction");
   digitalWrite(StpDIRB, LOW);
   delay(1);
   
@@ -79,7 +79,7 @@ void loop() {
   }
   
   delay(1000);
-  Serial.println("finished - toggling direction");
+  Serial.println("finished 200 steps (1 turn) - toggling direction");
   digitalWrite(StpDIRB, HIGH); //toggle direction
   delay(1);
   
