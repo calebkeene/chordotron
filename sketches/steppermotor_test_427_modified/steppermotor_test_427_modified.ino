@@ -8,12 +8,12 @@
 
 // using stepper motor driver 1
 
-const int StpENA = 48; 
-const int StpMS1A = 49; 
-const int StpMS2A = 50;
-const int StpMS3A = 51;
-const int StpSTPA = 52;
-const int StpDIRA = 53;
+//const int StpENA = 48; 
+//const int StpMS1A = 49; 
+//const int StpMS2A = 50;
+//const int StpMS3A = 51;
+//const int StpSTPA = 52;
+//const int StpDIRA = 53;
 
 // using stepper motor driver 2
 
@@ -25,13 +25,13 @@ const int StpSTPB = 9;
 const int StpDIRB = 8;
 
 void setup() {
-  pinMode(StpMS1A, OUTPUT);
-  pinMode(StpMS2A, OUTPUT);
-  pinMode(StpMS3A, OUTPUT);
-  pinMode(StpENA, OUTPUT);
-  pinMode(StpSTPA, OUTPUT);
-  pinMode(StpDIRA, OUTPUT);
-  
+//  pinMode(StpMS1A, OUTPUT);
+//  pinMode(StpMS2A, OUTPUT);
+//  pinMode(StpMS3A, OUTPUT);
+//  pinMode(StpENA, OUTPUT);
+//  pinMode(StpSTPA, OUTPUT);
+//  pinMode(StpDIRA, OUTPUT);
+//  
   pinMode(StpMS1B, OUTPUT);
   pinMode(StpMS2B, OUTPUT);
   pinMode(StpMS3B, OUTPUT);
@@ -40,18 +40,18 @@ void setup() {
   pinMode(StpDIRB, OUTPUT);
   
   //set microstep resolution
-  digitalWrite(StpMS1A, LOW);
-  digitalWrite(StpMS2A, LOW);
-  digitalWrite(StpMS3A, LOW);
+//  digitalWrite(StpMS1A, LOW);
+//  digitalWrite(StpMS2A, LOW);
+//  digitalWrite(StpMS3A, LOW);
   
   digitalWrite(StpMS1B, LOW);
   digitalWrite(StpMS2B, LOW);
   digitalWrite(StpMS3B, LOW);
   
-  digitalWrite(StpDIRA, HIGH); //toggle direction
-  digitalWrite(StpDIRB, HIGH); //toggle direction
+//  digitalWrite(StpDIRA, HIGH);
+  digitalWrite(StpDIRB, HIGH); // set initial direction
 
-  digitalWrite(StpENA, LOW);
+//  digitalWrite(StpENA, LOW);
   digitalWrite(StpENB, LOW);
 
   Serial.begin(9600);
