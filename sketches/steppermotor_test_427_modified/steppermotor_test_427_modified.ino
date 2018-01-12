@@ -1,89 +1,64 @@
+// -*- mode: C++ -*-
+// Make a single stepper bounce from one limit to another
+//
+#include <AccelStepper.h>
 
-/* motor connectors:
-1a: black
-2a: green
-1b: red
-2b:blue
-*/
+// Stepper motor driver B
+const int enableStepperB = 13; 
+const int MS1StepperB = 12; 
+const int MS2StepperB = 11;
+const int MS3StepperB = 10;
+const int stepStepperB = 9;
+const int setDirStepperB = 8;
 
-// using stepper motor driver 1
+const int maxStepperSpeed = 1000;
+const int numberSteps = 400;
 
-//const int StpENA = 48; 
-//const int StpMS1A = 49; 
-//const int StpMS2A = 50;
-//const int StpMS3A = 51;
-//const int StpSTPA = 52;
-//const int StpDIRA = 53;
+AccelStepper stepper(1, stepStepperB, setDirStepperB);
 
-// using stepper motor driver 2
+void setup()
+{  
 
-const int StpENB = 13; 
-const int StpMS1B = 12; 
-const int StpMS2B = 11;
-const int StpMS3B = 10;
-const int StpSTPB = 9;
-const int StpDIRB = 8;
+  pinMode(MS1StepperB, OUTPUT);
+  pinMode(MS2StepperB, OUTPUT);
+  pinMode(MS3StepperB, OUTPUT);
+  pinMode(enableStepperB, OUTPUT);
+  pinMode(stepStepperB, OUTPUT);
+  pinMode(setDirStepperB, OUTPUT);
 
-void setup() {
-//  pinMode(StpMS1A, OUTPUT);
-//  pinMode(StpMS2A, OUTPUT);
-//  pinMode(StpMS3A, OUTPUT);
-//  pinMode(StpENA, OUTPUT);
-//  pinMode(StpSTPA, OUTPUT);
-//  pinMode(StpDIRA, OUTPUT);
-//  
-  pinMode(StpMS1B, OUTPUT);
-  pinMode(StpMS2B, OUTPUT);
-  pinMode(StpMS3B, OUTPUT);
-  pinMode(StpENB, OUTPUT);
-  pinMode(StpSTPB, OUTPUT);
-  pinMode(StpDIRB, OUTPUT);
+  // microstep resolution
+  digitalWrite(MS1StepperB, LOW);
+  digitalWrite(MS2StepperB, LOW);
+  digitalWrite(MS3StepperB, LOW);
+
+  // set initial direction
+  digitalWrite(setDirStepperB, HIGH);
   
-  //set microstep resolution
-//  digitalWrite(StpMS1A, LOW);
-//  digitalWrite(StpMS2A, LOW);
-//  digitalWrite(StpMS3A, LOW);
-  
-  digitalWrite(StpMS1B, LOW);
-  digitalWrite(StpMS2B, LOW);
-  digitalWrite(StpMS3B, LOW);
-  
-//  digitalWrite(StpDIRA, HIGH);
-  digitalWrite(StpDIRB, HIGH); // set initial direction
-
-//  digitalWrite(StpENA, LOW);
-  digitalWrite(StpENB, LOW);
+  // enable (active low)
+  digitalWrite(enableStepperB, LOW);
 
   Serial.begin(9600);
+  stepper.moveTo(numberSteps);
+  stepper.setMaxSpeed(maxStepperSpeed);
+  stepper.setSpeed(maxStepperSpeed);
 }
-
 void loop() {
-//  digitalWrite(StpSTPA, HIGH);
-  for(int i = 0; i < 200; i++) {
-    digitalWrite(StpSTPB, HIGH);
-    delay(1);
-    digitalWrite(StpSTPB, LOW);
-    delay(1);
+  if(stepper.distanceToGo() == 0) {
+    Serial.println("one revolution completed, resetting");
+    Serial.print("current position is: ");
+    Serial.println(stepper.currentPosition());
+    stepper.setCurrentPosition(0);
+    Serial.print("set current position to: ");
+    Serial.println(stepper.currentPosition());
+    stepper.moveTo(numberSteps);
+    stepper.setMaxSpeed(maxStepperSpeed);
+    stepper.setSpeed(maxStepperSpeed);
+    delay(2000);
   }
-
-  delay(1000);
-  Serial.println("finished 200 steps (1 turn) - toggling direction");
-  digitalWrite(StpDIRB, LOW);
-  delay(1);
-  
-  for(int i = 0; i < 200; i++) {
-    digitalWrite(StpSTPB, HIGH);
-    delay(1);
-    digitalWrite(StpSTPB, LOW);
-    delay(1);
-  }
-  
-  delay(1000);
-  Serial.println("finished 200 steps (1 turn) - toggling direction");
-  digitalWrite(StpDIRB, HIGH); //toggle direction
-  delay(1);
-  
-//  digitalWrite(StpSTPA, LOW);
-//  digitalWrite(StpSTPB, LOW);
-//  delay(1000);
+//    if (stepper.distanceToGo() == 0){
+//      // change direction once position is reached
+//      stepper.moveTo(-stepper.currentPosition());
+//    }
+  stepper.runSpeedToPosition();
 }
+

@@ -11,6 +11,9 @@ const int MS3StepperB = 10;
 const int stepStepperB = 9;
 const int setDirStepperB = 8;
 
+// move the pickwheel a quarter turn each iteration
+const int positions[4] = {50, 100, 150, 200};
+
 AccelStepper stepper(1, stepStepperB, setDirStepperB);
 
 void setup()
@@ -36,15 +39,24 @@ void setup()
 
   Serial.begin(9600);
 
-  stepper.setMaxSpeed(400); // 200 steps/sec = 1rev/sec = 60rpm
-  stepper.setAcceleration(100);
-  stepper.moveTo(200); // seems to behave as 100/turn for this
+  //stepper.setMaxSpeed(400); // 200 steps/sec = 1rev/sec = 60rpm
+  //stepper.setAcceleration(100);
+  stepper.setSpeed(200);
 }
-void loop()
-{
-    if (stepper.distanceToGo() == 0){
-      // change direction once position is reached
-      stepper.moveTo(-stepper.currentPosition());
+void loop(){
+  for(int i = 0; i < 4; i++;) {
+    stepper.moveTo(positions[i]);
+
+    while(stepper.distanceToGo() != 0){
+      stepper.runSpeed();
     }
+  }
+  stepper.moveTo(-stepper.currentPosition());
+    
+      // change direction once position is reached
+      
+      Serial.println("position reached!")
+      delay(1000);
+
     stepper.run();
 }
