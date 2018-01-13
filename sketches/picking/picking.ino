@@ -11,8 +11,8 @@ const int MS3StepperB = 10;
 const int stepStepperB = 9;
 const int setDirStepperB = 8;
 
-const int maxStepperSpeed = 1000;
-const int numberSteps = 400;
+const int maxStepperSpeed = 5000;
+const int numberSteps = 200;
 
 AccelStepper stepper(1, stepStepperB, setDirStepperB);
 
@@ -53,7 +53,7 @@ void loop() {
     stepper.moveTo(numberSteps);
     stepper.setMaxSpeed(maxStepperSpeed);
     stepper.setSpeed(maxStepperSpeed);
-    delay(2000);
+    delay(4000);
   }
 //    if (stepper.distanceToGo() == 0){
 //      // change direction once position is reached
