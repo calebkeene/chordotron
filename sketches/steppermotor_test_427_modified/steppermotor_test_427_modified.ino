@@ -13,6 +13,7 @@ const int setDirStepperB = 8;
 
 const int maxStepperSpeed = 1000;
 const int numberSteps = 200;
+const int numberPickers = 4;
 
 AccelStepper stepper(1, stepStepperB, setDirStepperB);
 
@@ -50,10 +51,10 @@ void loop() {
     stepper.setCurrentPosition(0);
     Serial.print("set current position to: ");
     Serial.println(stepper.currentPosition());
-    stepper.moveTo(numberSteps);
+    stepper.moveTo(numberSteps/numberPickers);
     stepper.setMaxSpeed(maxStepperSpeed);
     stepper.setSpeed(maxStepperSpeed);
-    delay(2000);
+    delay(1000);
   }
 //    if (stepper.distanceToGo() == 0){
 //      // change direction once position is reached
