@@ -44,10 +44,15 @@ void setup()
   stepper.setSpeed(200);
 }
 void loop(){
-  for(int i = 0; i < 4; i++;) {
+  for(int i = 0; i < 4; i++) {
     stepper.moveTo(positions[i]);
 
     while(stepper.distanceToGo() != 0){
+      Serial.print("move to: ");
+      Serial.print(positions[i]);
+      Serial.print("curret position: ");
+      Serial.println(stepper.currentPosition());
+      Serial.println();
       stepper.runSpeed();
     }
   }
@@ -55,7 +60,7 @@ void loop(){
     
       // change direction once position is reached
       
-      Serial.println("position reached!")
+      Serial.println("position reached!");
       delay(1000);
 
     stepper.run();

@@ -12,6 +12,7 @@ const int setDirStepperA = 53;
 const int damperServoPin = 21;
 
 const int maxStepperSpeed = 1000;
+
 const int totalSteps = 200;
 const int noteSteps = 40;
 const int halvedNoteSteps = 20;
@@ -24,6 +25,9 @@ const int damperOnPos = 135;
 int numberNotesPlayed = 0;
 
 bool playingNote = false;
+
+const int numberSteps = 200;
+const int numberPickers = 4;
 
 Servo damper;
 AccelStepper stepper(1, stepStepperA, setDirStepperA);
@@ -127,7 +131,6 @@ void loop() {
     playingNote = false;
 
     Serial.println(stepper.currentPosition());
-
   }
 
   //midi1.read();
