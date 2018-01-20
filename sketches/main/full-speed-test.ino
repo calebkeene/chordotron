@@ -16,9 +16,7 @@ const int totalSteps = 200;
 const int noteSteps = 40;
 const int halvedNoteSteps = 20;
 
-const int damperOffPosTape = 128;
-const int damperOffPosFoam = 127;
-const int damperOffPos = damperOffPosTape;
+const int damperOffPos = 125;
 const int damperOnPos = 135;
 
 int numberNotesPlayed = 0;
@@ -61,16 +59,6 @@ void setup()
   //setStepperSpeed(maxStepperSpeed);
   // stepper.setMaxSpeed(maxStepperSpeed);
   // stepper.setAcceleration(1000);
-
-  stepper.setMaxSpeed(maxStepperSpeed);
-  stepper.setSpeed(maxStepperSpeed);
-  damper.write(damperOffPos);
-}
-
-void dampNote() {
-  delay(200);
-  damper.write(damperOnPos);
-  delay(200);
   damper.write(damperOffPos);
 }
 
@@ -111,29 +99,19 @@ void playNote() {
   setStepperSpeed(maxStepperSpeed);
 }
 
-void checkForNote() {
-  if(analogRead(A10) > 1000 && !playingNote) {
-    playNote();
-  }
-}
-
 void loop() {
+  if(analogRead(A10) > 1000 && !playingNote) {
+    playingNote = true;
+    stepper.moveTo(totalSteps);
+    stepper.setMaxSpeed(maxStepperSpeed);
+    stepper.setSpeed(maxStepperSpeed);
+  }
+
   if(stepper.distanceToGo() == 0 && playingNote) {
-    //Serial.println("one note played");
-    dampNote();
-    // Serial.print("current position is: ");
-    // Serial.println(stepper.currentPosition());
     stepper.setCurrentPosition(0);
     playingNote = false;
-
-    Serial.println(stepper.currentPosition());
-
+    delay(50);
   }
-
-  //midi1.read();
-  checkForNote();
   stepper.runSpeedToPosition();
-  //stepper.run();
 }
-
 

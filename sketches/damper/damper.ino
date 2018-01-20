@@ -10,17 +10,6 @@ void setup() {
   damper.attach(21);  // attaches the damper on pin 21 to the servo object
 }
 
-void set_pos() {
-  if (Serial.available() > 0) {
-    pos = Serial.read();
-  
-    if (pos > 180) {
-      pos = 180;
-    }else if (pos < 0) {
-      pos = 0;
-    }
-  }
-}
 
 void loop() {
   for (int i = 0; i < 5; i++) {
