@@ -2,6 +2,7 @@
 // Move stpper motor to specified frets as defined by a look-up table
 
 #include <AccelStepper.h>
+#include <Servo.h>
 #include <MIDI.h>
 
 // Stepper motor driver B
@@ -20,7 +21,9 @@ const int MS3Stepper = 51;
 const int stepStepper = 52;
 const int setDirStepper = 53;
 
-const int maxStepperSpeed = 15000;
+const int fretterServoPin = 20;
+
+const int maxStepperSpeed = 1000;
 const int totalSteps = 200;
 const int noteSteps = 40;
 const int halvedNoteSteps = 20;
@@ -31,20 +34,19 @@ const int numberFrets = 13;
 const int fretOffPos = 180;
 const int fretOnPos = 90;
 
-int test = 0;
-
 // length from nut to bridge = 816 mm
 // max length travelled by stepper = 450 mm
 
 int numberNotesPlayed = 0;
-int currentSteps = 0;
-int stepsToTake = 0;
-int fretNum = 4;
+int currentSteps = 0;     // number of steps away from the starting positions
+int stepsToTake = 0;      // number of steps to take from the current position to the next fret
+int fretNum = 1;
 
 bool playingNote = false;
 
 double fretPositions[numberFrets];
 
+Servo fretterServo;
 AccelStepper fretterStepper(1, stepStepper, setDirStepper);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
@@ -64,6 +66,8 @@ void setup()
   midi1.setHandleNoteOff(noteOffHandler);
 
   midi1.begin(MIDI_CHANNEL_OMNI);  // Listen to all incoming MIDI messages
+
+  fretterServo.attach(fretterServoPin);
 
   pinMode(MS1Stepper, OUTPUT);
   pinMode(MS2Stepper, OUTPUT);
@@ -88,8 +92,23 @@ void setup()
 
   fretterStepper.setMaxSpeed(maxStepperSpeed);
   fretterStepper.setSpeed(maxStepperSpeed);
+  fretterServo.write(fretOffPos);
 
   makeFretPositions();
+}
+
+void removeFret(){
+  fretterServo.write(fretOffPos);
+}
+
+void placeFret(){
+  fretterServo.write(fretOnPos);
+}
+
+// move fretter back to starting position
+void resetFretter(){
+  digitalWrite(setDirStepper, LOW);
+  fretterStepper.moveTo(currentSteps);
 }
 
 void setStepperSpeed(int speed) {
@@ -97,14 +116,6 @@ void setStepperSpeed(int speed) {
 }
 
 void noteOnHandler(byte channel, byte pitch, byte velocity) {
-  Serial.println("running noteOnHandler");
-  Serial.print("channel: ");
-  Serial.println(channel);
-  Serial.print("pitch: ");
-  Serial.println(pitch);
-  Serial.print("velocity: ");
-  Serial.println(velocity);
-
   if(velocity > 0) {
     playNote();
   }
@@ -115,7 +126,6 @@ void noteOffHandler(byte channel, byte pitch, byte velocity) {
 }
 
 void playNote() {
-  setFretterPosition();
   playingNote = true;
   numberNotesPlayed += 1;
 
@@ -124,12 +134,7 @@ void playNote() {
 }
 
 void checkForNote() {
-//  if(analogRead(A10) > 1000 && !playingNote) {
-//    playNote();
-//  }
-
-  if (test == 0) {
-    test = 1;
+  if(analogRead(A10) > 1000 && !playingNote) {
     playNote();
   }
 }
@@ -162,15 +167,40 @@ void setFretterPosition(){
   fretterStepper.moveTo(stepsToTake);
 }
 
+void checkSerial() {
+  if (Serial.available() > 0) {
+    byte incomingByte = Serial.read();
+    String incomingString = String(incomingByte);
+    int n = incomingString.toInt() - 48;
+    
+    if (n > 0 && n < (numberFrets)) {
+      fretNum = n;
+    }
+//    Serial.print("byte: ");
+//    Serial.println(incomingByte);
+//    Serial.print("string: ");
+//    Serial.println(incomingString);
+//    Serial.print("int: ");
+//    Serial.println(n);
+
+    setFretterPosition();
+  }
+}
+
 void loop() {
   if (fretterStepper.distanceToGo() == 0 && playingNote) {
+    placeFret();
+    delay(500);
     fretterStepper.setCurrentPosition(0);
+    Serial.println(fretterStepper.currentPosition());
     playingNote = false;
+    removeFret();
   }
 
-  checkForNote();
-  fretterStepper.runSpeedToPosition();
-  Serial.println(fretPositions[0]);
-  Serial.println(stepsToTake);
+  Serial.println(fretNum);
   Serial.println();
+  checkForNote();
+  checkSerial();
+  fretterStepper.runSpeedToPosition();
 }
+

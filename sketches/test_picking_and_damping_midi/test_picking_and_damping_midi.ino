@@ -2,8 +2,6 @@
 #include <Servo.h>
 #include <MIDI.h>
 
-int test = 0;
-
 const int enableStepperA = 48; 
 const int MS1StepperA = 49; 
 const int MS2StepperA = 50;
@@ -29,14 +27,14 @@ bool playingNote = false;
 
 Servo damper;
 AccelStepper stepper(1, stepStepperA, setDirStepperA);
-MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
+MIDI_CREATE_DEFAULT_INSTANCE();
 
 void setup()
 {  
-  midi1.setHandleNoteOn(noteOnHandler);
-  midi1.setHandleNoteOff(noteOffHandler);
+  MIDI.setHandleNoteOn(noteOnHandler);
+  MIDI.setHandleNoteOff(noteOffHandler);
 
-  midi1.begin(MIDI_CHANNEL_OMNI);  // Listen to all incoming MIDI messages
+  MIDI.begin(MIDI_CHANNEL_OMNI);  // Listen to all incoming MIDI messages
 
   damper.attach(damperServoPin);
 
@@ -114,11 +112,7 @@ void playNote() {
 }
 
 void checkForNote() {
-//  if(analogRead(A10) > 1000 && !playingNote) {
-//    playNote();
-//  }
-
-  if (Serial.available() > 0) {
+  if(analogRead(A10) > 1000 && !playingNote) {
     playNote();
   }
 }
@@ -136,8 +130,8 @@ void loop() {
 
   }
 
-//  midi1.read();
-  checkForNote();
+  MIDI.read();
+  //checkForNote();
   stepper.runSpeedToPosition();
   //stepper.run();
 }
