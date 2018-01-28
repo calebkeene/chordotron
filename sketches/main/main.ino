@@ -1,6 +1,3 @@
-// Implement stepper motor as a fretter
-// Move stpper motor to specified frets as defined by a look-up table
-
 #include <AccelStepper.h>
 #include <Servo.h>
 #include <MIDI.h>
@@ -73,7 +70,7 @@ void setup()
 
   damper.attach(damperServoPin);
   fretter.attach(fretterServoPin);
-  
+
   // Stepper A => Fretter
   pinMode(MS1StepperA, OUTPUT);
   pinMode(MS2StepperA, OUTPUT);
