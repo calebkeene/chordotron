@@ -24,12 +24,14 @@ const int fretterServoPin = 20;
 const int damperOffPos = 127;
 const int damperOnPos = 135;
 
-const int fretterOffPos = 0;// placeholders just for testing
-const int fretterOnPos = 45;
+const int fretterOffPos = 55;
+const int fretterOnPos = 42;
+
+// possible on position for the fretter on the other side OFF=110°, ON=130°
 
 const int maxStepperSpeed = 1000;
 const int totalSteps = 200;
-const int noteSteps = 40;
+const int noteSteps = 200;
 const int halvedNoteSteps = 20;
 
 const double scale_length = 816.00;     // in mm
@@ -62,8 +64,7 @@ void makeFretPositions() {
   }
 }
 
-void setup()
-{  
+void setup() {  
   // midi1.setHandleNoteOn(noteOnHandler);
   // midi1.setHandleNoteOff(noteOffHandler);
   // midi1.begin(MIDI_CHANNEL_OMNI);  // Listen to all incoming MIDI messages
@@ -188,6 +189,7 @@ void playNote() {
 void checkForNote() {
   if (Serial.available() > 0) {
     int fretToMoveTo = Serial.parseInt();
+    //fretter.write(fretToMoveTo);
     fretNote(fretToMoveTo);
   }
 }
