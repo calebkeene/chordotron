@@ -1,4 +1,5 @@
 #include <AccelStepper.h>
+#include <MultiStepper.h>
 #include <Servo.h>
 #include <MIDI.h>
 
@@ -51,6 +52,7 @@ Servo damper;
 Servo fretter;
 AccelStepper fretterStepper(1, stepStepperA, setDirStepperA);
 AccelStepper pickerStepper(2, stepStepperB, setDirStepperB);
+MultiStepper steppers;
 //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
 /**
@@ -126,6 +128,10 @@ void setup()
   
   damper.write(damperOffPos);
   fretter.write(fretterOffPos);
+
+  // use MultiStepper library to handle both stepper motors
+  steppers.addStepper(pickerStepper);
+  steppers.addStepper(fretterStepper);
   
   makeFretPositions();
 
