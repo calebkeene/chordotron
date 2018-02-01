@@ -4,38 +4,38 @@
 #include <MIDI.h>
 
 // Stepper motor driver A
-const int enableStepperA = 48; 
-const int MS1StepperA = 49; 
-const int MS2StepperA = 50;
-const int MS3StepperA = 51;
-const int stepStepperA = 52;
-const int setDirStepperA = 53;
+#define enableStepperA = 48; 
+#define MS1StepperA = 49; 
+#define MS2StepperA = 50;
+#define MS3StepperA = 51;
+#define stepStepperA = 52;
+#define setDirStepperA = 53;
 
 //Stepper motor driver B
-const int enableStepperB = 13; 
-const int MS1StepperB = 12; 
-const int MS2StepperB = 11;
-const int MS3StepperB = 10;
-const int stepStepperB = 9;
-const int setDirStepperB = 8;
+#define enableStepperB = 13; 
+#define MS1StepperB = 12; 
+#define MS2StepperB = 11;
+#define MS3StepperB = 10;
+#define stepStepperB = 9;
+#define setDirStepperB = 8;
 
-const int damperServoPin = 21;
-const int fretterServoPin = 20;
+#define damperServoPin = 21;
+#define fretterServoPin = 20;
 
-const int damperOffPos = 127;
-const int damperOnPos = 135;
+#define damperOffPos = 127;
+#define damperOnPos = 135;
 
-const int fretterOffPos = 0;// placeholders just for testing
-const int fretterOnPos = 45;
+#define fretterOffPos = 0;// placeholders just for testing
+#define fretterOnPos = 45;
 
-const int maxStepperSpeed = 1000;
-const int totalSteps = 200;
-const int noteSteps = 40;
-const int halvedNoteSteps = 20;
+#define maxStepperSpeed = 1000;
+#define totalSteps = 200;
+#define noteSteps = 40;
+#define halvedNoteSteps = 20;
 
 const double scaleLength = 816.00;     // in mm
 const double initialFretPosition = 40.0;   // initial position of the fretting mechanism in mm
-const int numberFrets = 13;
+#define numberFrets = 13;
 
 // length from nut to bridge = 816 mm
 // max length travelled by stepper = 450 mm
@@ -239,7 +239,8 @@ void loop() {
 
   //midi1.read();
   checkForNote();
-  fretterStepper.runSpeedToPosition();
-  pickerStepper.runSpeedToPosition();
+//  fretterStepper.runSpeedToPosition();
+//  pickerStepper.runSpeedToPosition();
+  steppers.run();
 }
 
