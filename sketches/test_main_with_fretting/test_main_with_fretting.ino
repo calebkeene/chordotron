@@ -4,38 +4,38 @@
 #include <MIDI.h>
 
 // Stepper motor driver A
-#define enableStepperA = 48; 
-#define MS1StepperA = 49; 
-#define MS2StepperA = 50;
-#define MS3StepperA = 51;
-#define stepStepperA = 52;
-#define setDirStepperA = 53;
+#define enableStepperA 48 
+#define MS1StepperA 49 
+#define MS2StepperA 50
+#define MS3StepperA 51
+#define stepStepperA 52
+#define setDirStepperA 53
 
 //Stepper motor driver B
-#define enableStepperB = 13; 
-#define MS1StepperB = 12; 
-#define MS2StepperB = 11;
-#define MS3StepperB = 10;
-#define stepStepperB = 9;
-#define setDirStepperB = 8;
+#define enableStepperB 13 
+#define MS1StepperB 12 
+#define MS2StepperB 11
+#define MS3StepperB 10
+#define stepStepperB 9
+#define setDirStepperB 8
 
-#define damperServoPin = 21;
-#define fretterServoPin = 20;
+#define damperServoPin 21
+#define fretterServoPin 20
 
-#define damperOffPos = 127;
-#define damperOnPos = 135;
+#define damperOffPos 127
+#define damperOnPos 135
 
-#define fretterOffPos = 0;// placeholders just for testing
-#define fretterOnPos = 45;
+#define fretterOffPos 0   // placeholders just for testing
+#define fretterOnPos 45
 
-#define maxStepperSpeed = 1000;
-#define totalSteps = 200;
-#define noteSteps = 40;
-#define halvedNoteSteps = 20;
+#define maxStepperSpeed 1000
+#define totalSteps 200
+#define noteSteps 40
+#define halvedNoteSteps 20
+#define numberFrets 13
 
 const double scaleLength = 816.00;     // in mm
 const double initialFretPosition = 40.0;   // initial position of the fretting mechanism in mm
-#define numberFrets = 13;
 
 // length from nut to bridge = 816 mm
 // max length travelled by stepper = 450 mm
@@ -239,8 +239,8 @@ void loop() {
 
   //midi1.read();
   checkForNote();
-//  fretterStepper.runSpeedToPosition();
-//  pickerStepper.runSpeedToPosition();
-  steppers.run();
+  fretterStepper.runSpeedToPosition();
+  pickerStepper.runSpeedToPosition();
+//  steppers.run();
 }
 
