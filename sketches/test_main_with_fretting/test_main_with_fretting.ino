@@ -35,12 +35,13 @@
 #define numberFrets 13
 
 const double scaleLength = 816.00;     // in mm
-const double initialFretPosition = 40.0;   // initial position of the fretting mechanism in mm
+const double initialFretPosition = 0.0;   // initial position of the fretting mechanism in mm
 
 // length from nut to bridge = 816 mm
 // max length travelled by stepper = 450 mm
 
 int numberNotesPlayed = 0;
+int currentStepsTaken = 0;
 int stepsToTake = 0;
 
 bool playingNote = false;
@@ -51,7 +52,7 @@ double fretPositions[numberFrets];
 Servo damper;
 Servo fretter;
 AccelStepper fretterStepper(1, stepStepperA, setDirStepperA);
-AccelStepper pickerStepper(2, stepStepperB, setDirStepperB);
+AccelStepper pickerStepper(1, stepStepperB, setDirStepperB);
 MultiStepper steppers;
 //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
@@ -178,7 +179,10 @@ void applyServoEffector(Servo servo, int delayTime, int position) {
 // distance travelled in one step = 70.022/200 = 0.35011 mm
 void fretNote(int fret) {
   double fretPosition = fretPositions[fret - 1];
-  stepsToTake = fretPosition/0.35011;
+  int stepsToFret = fretPosition/0.35011;
+//  stepsToTake = stepsToFret - currentStepsTaken;
+//  currentStepsTaken = abs(stepsToTake);
+  stepsToTake = stepsToFret;
   
   Serial.println("Fretting note!");
   Serial.print("moving to fret ");
@@ -193,54 +197,69 @@ void fretNote(int fret) {
   frettingNote = true;
 }
 
-void playNote() {
-  Serial.println("playing note!");
-  Serial.print("noteSteps: ");
-  Serial.println(noteSteps);
+void playNote(int stepperSpeed) {
+  Serial.println("playing note! \n");
   pickerStepper.moveTo(noteSteps);
-  pickerStepper.setSpeed(maxStepperSpeed);
+  pickerStepper.setSpeed(stepperSpeed);
   playingNote = true;
 
   // moveTo() also recalculates the speed for the next step, so need to set speed after calling it
 }
 
 void checkForNote() {
+  int stepperSpeed = maxStepperSpeed/15;
   if (Serial.available() > 0) {
     int fretToMoveTo = Serial.parseInt();
     fretNote(fretToMoveTo);
+    stepperSpeed = maxStepperSpeed;
   }
+  
+  pickerStepper.setCurrentPosition(0);
+  playNote(stepperSpeed);
 }
 
 void loop() {
-  if(frettingNote && fretterStepper.distanceToGo() == 0) {
-    Serial.println("reached fret position");
-    frettingNote = false;
-
-    Serial.println("applying fretter");
-    applyServoEffector(fretter, 0, fretterOnPos);
-
-    playNote();
-  }
-
-  if (playingNote && !frettingNote && pickerStepper.distanceToGo() == 0) {
-    Serial.print("picker current position: ");
-    Serial.println(pickerStepper.currentPosition());
-    Serial.println("reached play note position");
-
-    dampNote();
-
-    Serial.println("removing fretter");
-    applyServoEffector(fretter, 0, fretterOffPos);
-
-    numberNotesPlayed += 1;
-    pickerStepper.setCurrentPosition(0);
-    playingNote = false;
-  }
+//  if(frettingNote && fretterStepper.distanceToGo() == 0) {
+//    Serial.println("reached fret position");
+//    frettingNote = false;
+//
+//    Serial.println("applying fretter \n");
+//    applyServoEffector(fretter, 0, fretterOnPos);
+//  }
+//  
+//  if (playingNote && !frettingNote && pickerStepper.distanceToGo() == 0) {
+//    Serial.print("picker current position: ");
+//    Serial.println(pickerStepper.currentPosition());
+//    Serial.println("reached play note position");
+//
+//    dampNote();
+//
+//    Serial.println("removing fretter \n\n");
+//    applyServoEffector(fretter, 0, fretterOffPos);
+//
+//    numberNotesPlayed += 1;
+//    pickerStepper.setCurrentPosition(0);
+//    playingNote = false;
+//  }
 
   //midi1.read();
+
+  if (frettingNote) {
+    while (fretterStepper.distanceToGo() > 0) {
+      Serial.println("moving fretter \n");
+      fretterStepper.runSpeedToPosition();
+    }
+
+    if (fretterStepper.distanceToGo() == 0) {
+      frettingNote = false;
+    }
+  }
+
+  while (pickerStepper.distanceToGo() > 0) {
+    pickerStepper.runSpeedToPosition();
+  }
+
   checkForNote();
-  fretterStepper.runSpeedToPosition();
-  pickerStepper.runSpeedToPosition();
-//  steppers.run();
 }
+
 
