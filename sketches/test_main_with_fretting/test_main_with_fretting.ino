@@ -54,7 +54,7 @@ Servo fretter;
 AccelStepper fretterStepper(1, stepStepperA, setDirStepperA);
 AccelStepper pickerStepper(1, stepStepperB, setDirStepperB);
 MultiStepper steppers;
-//MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
 /**
  * The initial fret position is determined by the positions of the fretting mechanism.
@@ -80,9 +80,9 @@ void makeFretPositions() {
 
 void setup()
 {  
-  // midi1.setHandleNoteOn(noteOnHandler);
-  // midi1.setHandleNoteOff(noteOffHandler);
-  // midi1.begin(MIDI_CHANNEL_OMNI);  // Listen to all incoming MIDI messages
+   midi1.setHandleNoteOn(noteOnHandler);
+   midi1.setHandleNoteOff(noteOffHandler);
+   midi1.begin(MIDI_CHANNEL_OMNI);  // Listen to all incoming MIDI messages
 
   damper.attach(damperServoPin);
   fretter.attach(fretterServoPin);
@@ -139,34 +139,38 @@ void setup()
   Serial.begin(9600);
 }
 
-// void noteOnHandler(byte channel, byte pitch, byte velocity) {
-//   Serial.println("running noteOnHandler");
-//   Serial.print("channel: ");
-//   Serial.println(channel);
-//   Serial.print("pitch: ");
-//   Serial.println(pitch);
-//   Serial.print("velocity: ");
-//   Serial.println(velocity);
+void noteOnHandler(byte channel, byte pitch, byte velocity) {
+  Serial.println("running noteOnHandler");
+  Serial.print("channel: ");
+  Serial.println(channel);
+  Serial.print("pitch: ");
+  Serial.println(pitch);
+  Serial.print("velocity: ");
+  Serial.println(velocity);
 
-//   if(velocity > 0) {
-//     int fret = convertPitchToFret(pitch);
-//     fretNote(fret);
-//   }
-// }
+  if(velocity > 0) {
+    int fret = convertPitchToFret(pitch);
+    fretNote(fret);
+  }
 
-// void convertPitchToFret(byte pitch) {
-//   // lookup table of some kind here
-//   return fret;
-// }
+  playNote(maxStepperSpeed);
+}
 
-// void noteOffHandler(byte channel, byte pitch, byte velocity) {
-//   Serial.println("This will be where the magic happens");
-// }
+int convertPitchToFret(byte pitch) {
+  // lookup table of some kind here
+//  return fret;
+  return 1;
+}
+
+void noteOffHandler(byte channel, byte pitch, byte velocity) {
+//  Serial.println("This will be where the magic happens");
+  dampNote();
+}
 
 void dampNote() {
   Serial.println("damping note");
   applyServoEffector(damper, 200, damperOnPos);
-  applyServoEffector(damper, 200, damperOffPos);
+  applyServoEffector(damper, 0, damperOffPos);
 }
 
 void applyServoEffector(Servo servo, int delayTime, int position) {
@@ -183,14 +187,8 @@ void fretNote(int fret) {
 //  stepsToTake = stepsToFret - currentStepsTaken;
 //  currentStepsTaken = abs(stepsToTake);
   stepsToTake = stepsToFret;
-  
-  Serial.println("Fretting note!");
-  Serial.print("moving to fret ");
-  Serial.println(fret);
-  Serial.print("fretPosition: ");
-  Serial.println(fretPosition);
-  Serial.print("stepsToTake: ");
-  Serial.println(stepsToTake);
+
+  Serial.println("fretting");
 
   fretterStepper.moveTo(stepsToTake);
   fretterStepper.setSpeed(maxStepperSpeed);
@@ -198,55 +196,19 @@ void fretNote(int fret) {
 }
 
 void playNote(int stepperSpeed) {
-  Serial.println("playing note! \n");
   pickerStepper.moveTo(noteSteps);
   pickerStepper.setSpeed(stepperSpeed);
   playingNote = true;
+  Serial.println("playing note");
 
   // moveTo() also recalculates the speed for the next step, so need to set speed after calling it
 }
 
-void checkForNote() {
-  int stepperSpeed = maxStepperSpeed/15;
-  if (Serial.available() > 0) {
-    int fretToMoveTo = Serial.parseInt();
-    fretNote(fretToMoveTo);
-    stepperSpeed = maxStepperSpeed;
-  }
-  
-  pickerStepper.setCurrentPosition(0);
-  playNote(stepperSpeed);
-}
-
 void loop() {
-//  if(frettingNote && fretterStepper.distanceToGo() == 0) {
-//    Serial.println("reached fret position");
-//    frettingNote = false;
-//
-//    Serial.println("applying fretter \n");
-//    applyServoEffector(fretter, 0, fretterOnPos);
-//  }
-//  
-//  if (playingNote && !frettingNote && pickerStepper.distanceToGo() == 0) {
-//    Serial.print("picker current position: ");
-//    Serial.println(pickerStepper.currentPosition());
-//    Serial.println("reached play note position");
-//
-//    dampNote();
-//
-//    Serial.println("removing fretter \n\n");
-//    applyServoEffector(fretter, 0, fretterOffPos);
-//
-//    numberNotesPlayed += 1;
-//    pickerStepper.setCurrentPosition(0);
-//    playingNote = false;
-//  }
-
-  //midi1.read();
+  midi1.read();
 
   if (frettingNote) {
     while (fretterStepper.distanceToGo() > 0) {
-      Serial.println("moving fretter \n");
       fretterStepper.runSpeedToPosition();
     }
 
@@ -255,11 +217,16 @@ void loop() {
     }
   }
 
-  while (pickerStepper.distanceToGo() > 0) {
-    pickerStepper.runSpeedToPosition();
-  }
+  if (playingNote) {
+    while (pickerStepper.distanceToGo() > 0) {
+      pickerStepper.runSpeedToPosition();
+    }
 
-  checkForNote();
+    if (pickerStepper.distanceToGo() == 0) {
+      playingNote = false;
+      pickerStepper.setCurrentPosition(0);
+    }
+  }
 }
 
 
