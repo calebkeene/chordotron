@@ -2,6 +2,7 @@
 #include <MultiStepper.h>
 #include <Servo.h>
 #include <MIDI.h>
+#include <HashMap.h>
 
 // Stepper motor driver A
 #define enableStepperA 48 
@@ -32,7 +33,7 @@
 #define totalSteps 200
 #define noteSteps 40
 #define halvedNoteSteps 20
-#define numberFrets 13
+#define numberNotes 20
 
 const double scaleLength = 816.00;     // in mm
 const double initialFretPosition = 0.0;   // initial position of the fretting mechanism in mm
@@ -47,7 +48,9 @@ int stepsToTake = 0;
 bool playingNote = false;
 bool frettingNote = false;
 
-double fretPositions[numberFrets];
+//double noteFreqTable[127];
+HashType<byte, int>hashRawPitchSteps[numberNotes];
+HashMap<byte, int> pitchStepsTable = HashMap<byte, int> (hashRawPitchSteps, numberNotes);
 
 Servo damper;
 Servo fretter;
@@ -55,6 +58,25 @@ AccelStepper fretterStepper(1, stepStepperA, setDirStepperA);
 AccelStepper pickerStepper(1, stepStepperB, setDirStepperB);
 MultiStepper steppers;
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
+
+/**
+ * fn = f0*(a^n)
+ * fn = frequnecy of note n half steps away from f0
+ * f0 = fixed note frequency
+ * n = number of half steps away from f0
+ * a = 2^(1/12)
+ * 
+ * For simplicity, assume f0 = C0 (16.35 Hz)
+ * where A1 is 21 helf steps away from C0
+ */
+//void makeNoteFreqTable() {
+//  double a = pow(2, 1/12.0);
+//  int n = 0;
+//
+//  for (n = 0; n < 128; n++) {
+//    noteFreqTable[n] = 16.35*(pow(a, n));
+//  }
+//}
 
 /**
  * The initial fret position is determined by the positions of the fretting mechanism.
@@ -65,16 +87,29 @@ MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
  * n = fret number
  * a = distance from fret starting position to nut
  */
-void makeFretPositions() {
-  int n = 1;
-  double fretPosition = 0.0;
-  while ((n < (numberFrets + 1)) && fretPosition < scaleLength) {
-    fretPosition = scaleLength - (scaleLength/pow(2.0, (n/12.0)));
 
-    if (fretPosition > initialFretPosition && fretPosition < scaleLength) {
-      fretPositions[n - 1] = fretPosition - initialFretPosition;    // subtract initial fret position from calculated value to find the distance it should move
-      n+=1;
-    }
+/**
+ * Assume the string is tuned to A3 (220 Hz)
+ * Theoretically, should be able to play 20 notes on a single string (including open string)
+ * A3 (pitch 45) --> F5 (pitch 65)
+ * Use pitch value recieved pitch value from MIDI and use it to find the number of steps
+ * away from the starting position.
+ * 
+ * The initial fret position is determined by the positions of the fretting mechanism.
+ * This needs to be accounted for when calculating the fret positions for the string.
+ * d = s - (s/(2^(n/12)))
+ * d = distance of fret from nut (mm)
+ * s = scale length (mm)
+ * n = fret number
+ * a = distance from fret starting position to nut
+ */
+void makePitchStepsTable() {
+  byte pitch = 45;
+
+  for (int n = 0; n < numberNotes; n++) {
+    double fretPosition = scaleLength - (scaleLength/pow(2.0, (n/12.0)));
+    int stepsToFret = fretPosition/0.35011;
+    pitchStepsTable[n](pitch + n, stepsToFret);
   }
 }
 
@@ -134,7 +169,7 @@ void setup()
   steppers.addStepper(pickerStepper);
   steppers.addStepper(fretterStepper);
   
-  makeFretPositions();
+  makePitchStepsTable();
 
   Serial.begin(9600);
 }
@@ -149,21 +184,24 @@ void noteOnHandler(byte channel, byte pitch, byte velocity) {
   Serial.println(velocity);
 
   if(velocity > 0) {
-    int fret = convertPitchToFret(pitch);
-    fretNote(fret);
+    int stepsToFret = convertPitchToSteps(pitch);
+    fretNote(stepsToFret);
   }
 
   playNote(maxStepperSpeed);
 }
 
-int convertPitchToFret(byte pitch) {
-  // lookup table of some kind here
-//  return fret;
-  return 1;
+int convertPitchToSteps(byte pitch) {
+  int steps = pitchStepsTable.getValueOf(pitch);
+
+  if (!steps) {
+    steps = 0;
+  }
+
+  return steps;
 }
 
 void noteOffHandler(byte channel, byte pitch, byte velocity) {
-//  Serial.println("This will be where the magic happens");
   dampNote();
 }
 
@@ -171,6 +209,7 @@ void dampNote() {
   Serial.println("damping note");
   applyServoEffector(damper, 200, damperOnPos);
   applyServoEffector(damper, 0, damperOffPos);
+  Serial.println();
 }
 
 void applyServoEffector(Servo servo, int delayTime, int position) {
@@ -181,16 +220,26 @@ void applyServoEffector(Servo servo, int delayTime, int position) {
 // wheel diameter = 22.3 mm
 // distance travelled in one stepper motor revolution (200 steps) = 22.3(3.14) = 70.022 mm
 // distance travelled in one step = 70.022/200 = 0.35011 mm
-void fretNote(int fret) {
-  double fretPosition = fretPositions[fret - 1];
-  int stepsToFret = fretPosition/0.35011;
-//  stepsToTake = stepsToFret - currentStepsTaken;
-//  currentStepsTaken = abs(stepsToTake);
-  stepsToTake = stepsToFret;
+void fretNote(int stepsToFret) {
+  Serial.print("steps to fret: ");
+  Serial.println(stepsToFret);
+  Serial.print("current steps taken: ");
+  Serial.println(currentStepsTaken);
+  stepsToTake = stepsToFret - currentStepsTaken;
+  currentStepsTaken = stepsToFret;
 
-  Serial.println("fretting");
+  if (stepsToTake < 0) {
+    digitalWrite(setDirStepperA, LOW);
+    Serial.println("fretting away from bridge");
+  } else {
+    digitalWrite(setDirStepperA, HIGH);
+    Serial.println("fretting to bridge");
+  }
 
-  fretterStepper.moveTo(stepsToTake);
+  Serial.print("steps to take: ");
+  Serial.println(stepsToTake);
+
+  fretterStepper.moveTo(abs(stepsToTake));
   fretterStepper.setSpeed(maxStepperSpeed);
   frettingNote = true;
 }
