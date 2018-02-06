@@ -1,3 +1,9 @@
+/**
+ * IGNORE FILE
+ * CODE INCOMPLETE AND NOT WORKING
+ */
+
+
 #include <AccelStepper.h>
 #include <MultiStepper.h>
 #include <Servo.h>
@@ -5,7 +11,7 @@
 #include <HashMap.h>
 
 // Stepper motor driver A
-#define enableStepperA 48 
+#define enableStepperA 48
 #define MS1StepperA 49 
 #define MS2StepperA 50
 #define MS3StepperA 51
@@ -38,13 +44,14 @@
 #define halvedNoteSteps 20
 #define numberNotes 20
 
-const double scaleLength = 816.00;     // in mm
+// length from nut to bridge = 816 mm
+// max length travelled by stepper = 550 mm
+#define scaleLength = 816.00;     // in mm
+#define fretTravelLength = 550.00;
 const double initialFretPosition = 0.0;   // initial position of the fretting mechanism in mm
 
-// length from nut to bridge = 816 mm
-// max length travelled by stepper = 450 mm
-
 int numberNotesPlayed = 0;
+int fretTravelSteps = 0;
 int currentStepsTakenFretterA = 0;
 int currentStepsTakenFretterB = 0;
 int currentStepsTakenFretterC = 0;
@@ -98,6 +105,7 @@ void makePitchStepsTables() {
   byte pitch = 45;
 
   // set initial step positions
+  fretTravelSteps = scaleLength/0.35011;
   currentStepsTakenFretterA = distanceFromNutA/0.35011;
   currentStepsTakenFretterB = distanceFromNutBC/0.35011;
   currentStepsTakenFretterC = currentStepsTakenFretterB;
@@ -288,7 +296,144 @@ void fretNote(byte pitch) {
  *      the first fret fretter 1 will need to move to the right. Fretter 2 will first need
  *      to be moved out of its way.
  */
-void calculateFretterPositions() {
+
+ /**
+  * return false if 
+  */
+bool calculateNewFretterPositions(char stepper, int stepsToTake) {
+  int tempNewPosA = currentStepsTakenFretterA;
+  int tempNewPosB = currentStepsTakenFretterB;
+  int tempNewPosC = currentStepsTakenFretterC;
+  int tempNewPosD = currentStepsTakenFretterD;
+  
+  switch(stepper) {
+    case 'A':
+    case 'B':
+      if (!moveFretter(tempNewPosA, tempNewPosB, stepsToTake)) {
+        return false;
+      }
+      
+      if (interferesWithOtherFretter('B', tempNewPosB)) {
+        if (!moveFretter(tempNewPosC, tempNewPosD, stepsToTake)) {
+          return false;
+        }
+      }
+      break;
+    case 'C':
+    case 'D':
+      if (!moveFretter(tempNewPosC, tempNewPosD, stepsToTake)) {
+        return false;
+      }
+      
+      if (interferesWithOtherFretter('C', tempNewPosC)) {
+        if (!moveFretter(tempNewPosA, tempNewPosB, stepsToTake)) {
+          return false;
+        }
+      }
+      break;
+  }
+}
+
+bool fretterPhysicallyLimited(int newPosition) {
+  if (newPosition > fretTravelSteps || newPosition < 0) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+/**
+ * Use the new position of fret arms B or C to check (for simplicity)
+ * These should be set at the same time as fret arms A and D
+ */
+bool interferesWithOtherFretter(char stepper, int newPosition) {
+  switch(stepper) {
+    case 'B':
+      if (newPosition > currentStepsTakenFretterC) {
+        return true;
+      } else {
+        return false; 
+      }
+      break;
+    case 'C':
+      if (newPosition < currentStepsTakenFretterB) {
+        return true;
+      } else {
+        return false; 
+      }
+      break;
+  }
+}
+
+/**
+ * The positions fo both fret arms on the fretter need to be updated.
+ */
+bool moveFretter(int currentSteps1*,int currentSteps2*, int stepsToTake) {
+  if (fretterPhysicallyLimited(currentSteps1 + stepsToTake) || fretterPhysicallyLimited(currentSteps2 + stepsToTake)) {
+    return false;
+  } else {
+    currentSteps1 += stepsToTake;
+    currentSteps2 += stepsToTake;
+    return true;
+  }
+}
+
+void sortSteps(int steps*, int n, char steppers*) {
+  int i, stepKey, j;
+  char steppersKey;
+  
+   for (i = 1; i < n; i++)
+   {
+       stepKey = steps[i];
+       steppersKey = steppers[i];
+       j = i-1;
+ 
+       /* Move elements of steps[0..i-1], that are
+          less than stepKey, to one position ahead
+          of their current position */
+       while (j >= 0 && steps[j] < stepKey)
+       {
+           steps[j+1] = steps[j];
+           steppers[j+1] = steppers[j];
+           j = j-1;
+       }
+       steps[j+1] = stepKey;
+       steppers[j+1] = steppersKey;
+   }
+}
+
+void fretNote() {
+  // find steps from initial positions to fret for each fret arm
+  // calculate number of steps away from target position for currenet position for each fret arm
+  // sort all stepsToTake from smallest to largest
+  // use smallest number of steps
+  // calculate new position of stepper
+    // check if new position of stepper exceeds physical limits
+      // return and use stepper with next smallest number of steps if that is the case
+    // check if the new positions will interfere with the current positions of the other fretter
+      // calculate steps to move other fretter and check if new position of stepper exceeds physical limits
+        // if limited, use stepper with next smallest number of steps
+    // if passes all checks, update new position(s)
+
+  int stepsToFretFretterA = pitchStepsTableFretterA.getValueOf(pitch);
+  int stepsToFretFretterBC = pitchStepsTableFretterBC.getValueOf(pitch);
+  int stepsToFretFretterD = pitchStepsTableFretterD.getValueOf(pitch);
+  
+  int stepsToTakeFretterA = stepsToFretFretterA - currentStepsTakenFretterA;
+  int stepsToTakeFretterB = stepsToFretFretterBC - currentStepsTakenFretterB;
+  int stepsToTakeFretterC = stepsToFretFretterBC - currentStepsTakenFretterC;
+  int stepsToTakeFretterD = stepsToFretFretterD - currentStepsTakenFretterD;
+
+  int stepsToTake[] = {stepsToTakeFretterA, stepsToTakeFretterB, stepsToTakeFretterC, stepsToTakeFretterD};
+  char steppers[] = {'A', 'B', 'C', 'D'};
+  sortSteps(stepsToTake, 4, steppers);
+
+  bool checkingFretters = true;
+  int n = 0;
+
+  while (checkingFretters) {
+    checkingFretters = calculateNewFretterPositions(steppers[n], stepsToTake[n]);
+  }
 }
 
 void moveStepper(char stepper, int steps) {
