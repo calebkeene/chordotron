@@ -46,16 +46,16 @@ int FretterArm1BOnPos = 45;
 // const int stepStepperB = 9;
 // const int setDirStepperB = 8;
 
-#define damperServoPin = 21;
-#define fretter1ServoPin = 20;
-#define fretter2ServoPin = 40;
+#define damperServoPin 21
+#define fretter1ServoPin 20
+#define fretter2ServoPin 40
 
-#define damperOffPos = 123;
-#define damperOnPos = 120;
+#define damperOffPos 123
+#define damperOnPos 120
 
 // possible on position for the fretter on the other side OFF=110°, ON=130°
-#define totalSteps = 200;
-#define noteSteps = 40;
+#define totalSteps 200
+#define noteSteps 40
 
 bool playingNote = false;
 bool frettingNote = false;
@@ -66,7 +66,7 @@ Servo fretter1;
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
-void setup() {  
+void setup() {
   midi1.setHandleNoteOn(noteOnHandler);
   midi1.setHandleNoteOff(noteOffHandler);
   midi1.begin(MIDI_CHANNEL_OMNI);  // Listen to all incoming MIDI messages
@@ -74,7 +74,7 @@ void setup() {
   damper.attach(damperServoPin);
   fretter1.attach(fretter1ServoPin);
 
-  // Stepper A => Fretter
+  // Stepper A => Fretter 1
   pinMode(fretterStepper1.MSAPin, OUTPUT);
   pinMode(fretterStepper1.MSBPin, OUTPUT);
   pinMode(fretterStepper1.MSCPin, OUTPUT);
@@ -89,6 +89,22 @@ void setup() {
   digitalWrite(fretterStepper1.setDirectionPin, fretterStepper1Direction);
   // enable (active low)
   digitalWrite(fretterStepper1.enablePin, LOW);
+
+  // Stepper B => Fretter 2
+  pinMode(fretterStepper2.MSAPin, OUTPUT);
+  pinMode(fretterStepper2.MSBPin, OUTPUT);
+  pinMode(fretterStepper2.MSCPin, OUTPUT);
+  pinMode(fretterStepper2.enablePin, OUTPUT);
+  pinMode(fretterStepper2.stepPin, OUTPUT);
+  pinMode(fretterStepper2.setDirectionPin, OUTPUT);
+  // microstep resolution
+  digitalWrite(fretterStepper2.MSAPin, LOW);
+  digitalWrite(fretterStepper2.MSBPin, LOW);
+  digitalWrite(fretterStepper2.MSCPin, LOW);
+  // set initial direction
+  digitalWrite(fretterStepper2.setDirectionPin, fretterStepper2Direction);
+  // enable (active low)
+  digitalWrite(fretterStepper2.enablePin, LOW);
 
 
   // pinMode(pickerStepper.MSAPin, OUTPUT);
@@ -132,7 +148,7 @@ void applyServoEffector(Servo servo, int delayTime, int position) {
 // distance travelled in one step = 70.022/200 = 0.35011 mm
 
 void playNote() {
-  moveStepper(pickerStepper, noteSteps, HIGH);
+//  moveStepper(pickerStepper, noteSteps, HIGH);
 }
 
 void noteOnHandler(byte channel, byte pitch, byte velocity) {
@@ -214,11 +230,12 @@ void noteOnHandler(byte channel, byte pitch, byte velocity) {
       //fretNote();
     }
     //playNote();
+  }
 }
 
 
 void noteOffHandler(byte channel, byte pitch, byte velocity) {
-  // Damp in here
+  Serial.println("damp note");
 }
 
 void checkForNote() {
