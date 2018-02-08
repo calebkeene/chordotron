@@ -46,16 +46,16 @@ int FretterArm1BOnPos = 45;
 // const int stepStepperB = 9;
 // const int setDirStepperB = 8;
 
-const int damperServoPin = 21;
-const int fretter1ServoPin = 20;
-const int fretter2ServoPin = 40;
+#define damperServoPin = 21;
+#define fretter1ServoPin = 20;
+#define fretter2ServoPin = 40;
 
-const int damperOffPos = 123;
-const int damperOnPos = 120;
+#define damperOffPos = 123;
+#define damperOnPos = 120;
 
 // possible on position for the fretter on the other side OFF=110°, ON=130°
-const int totalSteps = 200;
-const int noteSteps = 40;
+#define totalSteps = 200;
+#define noteSteps = 40;
 
 bool playingNote = false;
 bool frettingNote = false;
