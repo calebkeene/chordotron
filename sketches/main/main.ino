@@ -1,6 +1,18 @@
 #include <Servo.h>
 #include <MIDI.h>
 
+#define damperServoPin 21
+#define fretter1ServoPin 20
+#define fretter2ServoPin 40
+
+#define damperOffPos 123
+#define damperOnPos 120
+
+// possible on position for the fretter on the other side OFF=110°, ON=130°
+#define totalSteps 200
+#define noteSteps 40
+
+#define startingNote 48
 
 struct StepperMotor {
   int enablePin;
@@ -46,23 +58,12 @@ int FretterArm1BOnPos = 45;
 // const int stepStepperB = 9;
 // const int setDirStepperB = 8;
 
-#define damperServoPin 21
-#define fretter1ServoPin 20
-#define fretter2ServoPin 40
-
-#define damperOffPos 123
-#define damperOnPos 120
-
-// possible on position for the fretter on the other side OFF=110°, ON=130°
-#define totalSteps 200
-#define noteSteps 40
-
 bool playingNote = false;
 bool frettingNote = false;
 
 Servo damper;
 Servo fretter1;
-//Servo fretter2;
+Servo fretter2;
 
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, midi1);
 
@@ -73,6 +74,7 @@ void setup() {
 
   damper.attach(damperServoPin);
   fretter1.attach(fretter1ServoPin);
+  fretter2.attach(fretter2ServoPin);
 
   // Stepper A => Fretter 1
   pinMode(fretterStepper1.MSAPin, OUTPUT);
@@ -89,6 +91,8 @@ void setup() {
   digitalWrite(fretterStepper1.setDirectionPin, fretterStepper1Direction);
   // enable (active low)
   digitalWrite(fretterStepper1.enablePin, LOW);
+
+  
 
   // Stepper B => Fretter 2
   pinMode(fretterStepper2.MSAPin, OUTPUT);
@@ -124,6 +128,7 @@ void setup() {
   
   damper.write(damperOffPos);
   fretter1.write(fretter1OffPos);
+  fretter2.write(fretter1OffPos);
 
   Serial.begin(9600);
 }
@@ -165,22 +170,22 @@ void noteOnHandler(byte channel, byte pitch, byte velocity) {
   Serial.println(note);
 
   if(velocity > 0) {
-    if(note == 36) {
+    if(note == startingNote) {
       //open string => A3
       //moveToPosition(fretterStepper1, )
 
     }
-    else if(note > 36 && note <= 40) {
+    else if(note > startingNote && note <= (startingNote + 4)) {
       // A3# to C3#
-      int stepsFromOrigin = fretter1APositions[note - 37];
+      int stepsFromOrigin = fretter1APositions[note - startingNote - 1];
       Serial.print("Steps: ");
       Serial.println(stepsFromOrigin);
       
       if(fretterStepper1APosition < stepsFromOrigin) {
-        fretterStepper1Direction = HIGH; // go away from origin;
+        fretterStepper1Direction = LOW; // go away from origin;
       }
       else {
-        fretterStepper1Direction = LOW;
+        fretterStepper1Direction = HIGH;
       }
 
       int stepsToMove = stepsFromOrigin - fretterStepper1APosition;
@@ -191,16 +196,16 @@ void noteOnHandler(byte channel, byte pitch, byte velocity) {
       fretterStepper1BPosition += stepsToMove;
       // fretNote();
     }
-    else if(note > 40 && note <= 46) {
-      int stepsFromOrigin = fretter1BPositions[note - 41];
+    else if(note > (startingNote + 4) && note <= (startingNote + 10)) {
+      int stepsFromOrigin = fretter1BPositions[note - startingNote - 5];
       Serial.print("Steps: ");
       Serial.println(stepsFromOrigin);
 
       if(fretterStepper1BPosition < stepsFromOrigin) {
-        fretterStepper1Direction = HIGH; // go away from origin;
+        fretterStepper1Direction = LOW; // go away from origin;
       }
       else {
-        fretterStepper1Direction = LOW;
+        fretterStepper1Direction = HIGH;
       }
 
       int stepsToMove = stepsFromOrigin - fretterStepper1BPosition;
@@ -210,17 +215,17 @@ void noteOnHandler(byte channel, byte pitch, byte velocity) {
       fretterStepper1BPosition += stepsToMove;
       //fretNote();
     }
-    else {
-      int stepsFromOrigin = fretter2APositions[note - 47];
+    else if(note > (startingNote + 10) && note <= (startingNote + 23)) {
+      int stepsFromOrigin = fretter2APositions[note - startingNote - 10];
 
       Serial.print("Steps: ");
       Serial.println(stepsFromOrigin);
 
       if(fretterStepper2APosition < stepsFromOrigin) {
-        fretterStepper2Direction = HIGH; // go away from origin;
+        fretterStepper2Direction = LOW; // go away from origin;
       }
       else {
-        fretterStepper2Direction = LOW;
+        fretterStepper2Direction = HIGH;
       }
 
       int stepsToMove = stepsFromOrigin - fretterStepper2APosition;
@@ -238,16 +243,16 @@ void noteOffHandler(byte channel, byte pitch, byte velocity) {
   Serial.println("damp note");
 }
 
-void checkForNote() {
-  if (Serial.available() > 0) {
-    Serial.println("moving stepper");
-    // USEFUL FOR DEBUGGING
-
-    int numberStepsToMove = Serial.parseInt();
-    moveStepper(fretterStepper1, numberStepsToMove, fretterStepper1Direction);
-
-  }
-}
+//void checkForNote() {
+//  if (Serial.available() > 0) {
+//    Serial.println("moving stepper");
+//    // USEFUL FOR DEBUGGING
+//
+//    int numberStepsToMove = Serial.parseInt();
+//    moveStepper(fretterStepper1, numberStepsToMove, fretterStepper1Direction);
+//
+//  }
+//}
 
 void moveStepper(StepperMotor stepper, int stepsToMove, int stepperCurrentDirection) {
 
@@ -263,5 +268,6 @@ void moveStepper(StepperMotor stepper, int stepsToMove, int stepperCurrentDirect
 
 void loop() {
   midi1.read();
+//  checkForNote();
 }
 
