@@ -370,7 +370,7 @@ bool interferesWithOtherFretter(char stepper, int newPosition) {
  */
 bool moveFretter(int currentSteps1*,int currentSteps2*, int stepsToTake) {
   if (fretterPhysicallyLimited(currentSteps1 + stepsToTake) || fretterPhysicallyLimited(currentSteps2 + stepsToTake)) {
-    return false;
+    return false; 
   } else {
     currentSteps1 += stepsToTake;
     currentSteps2 += stepsToTake;
