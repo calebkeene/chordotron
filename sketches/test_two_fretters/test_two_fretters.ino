@@ -404,7 +404,7 @@ void sortSteps(int steps*, int n, char steppers*) {
 
 void fretNote() {
   // find steps from initial positions to fret for each fret arm
-  // calculate number of steps away from target position for currenet position for each fret arm
+  // calculate number of steps away from target position for current position for each fret arm
   // sort all stepsToTake from smallest to largest
   // use smallest number of steps
   // calculate new position of stepper
